@@ -1,6 +1,7 @@
 <!doctype HTML>
 <html>
     <head>
+        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0"> 
         <title>player</title>
         <style>
             * {
@@ -11,13 +12,13 @@
                 color: white;
             }
             b {
-                font-size: x-large;
+                font-size: 20px;
             }
             .playerbox {
                 background-color: #111111;
-                height: 80vh;
+                height: 90vh;
                 width: 70%;
-                min-height: 600px;
+                min-height: 200px;
                 min-width: 512px;
                 border: 1px solid grey;
                 margin: auto;
@@ -25,7 +26,6 @@
                 border-radius: 1%;
             }
             .playerhalf {
-                height: 80vh;
                 width: 50%;
                 float: left;
             }
@@ -67,8 +67,6 @@
                 margin: auto;
                 background-color: #222222;
                 margin-top: 30px;
-                height: 90%;
-				min-height: 200px;
                 width: 80%;
                 border-radius: 1%;
                 border: 1px solid grey
@@ -77,7 +75,7 @@
 				padding-top: 20px;
 			}
             .albumcover {
-                width: 80%;
+                height: calc(50vh - 30px);
                 display: block; 
                 margin: auto;
                 border: 1px solid grey; 
@@ -85,6 +83,7 @@
             }
             .controls {
                 margin: auto;
+                margin-bottom: 15px;
                 text-align: center;
             }
             .seek {
@@ -130,7 +129,6 @@
                 font-family: monospace;
             }
         </style>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     </head>
 
     <body>
@@ -141,8 +139,8 @@
                         <img class="albumcover" src="placeholder.jpg">
                     </div>
                     <div class="info">
-                        <b>TITLE</b><br>
-                        ARTIST - ALBUM
+                        <b id="playingTitle">TITLE</b><br>
+                        <span id="playingArtist" style="font-size: 12px;">ARTIST</span> - <span id="playingAlbum" style="font-size: 12px;">ALBUM</span>
                     </div>
                     <div class="controls">
                         <button class="buttonlarge" id="back" type="button">⏮</button>
@@ -150,9 +148,71 @@
                         <button class="buttonlarge" id="forward" type="button">⏭</button><br>
                         <input class="seek" id="playerSeek" type="range" min="0" max="100" value="0"><br>
                         <div class="playback">
-                            <span id="currentTime">0:00</span> / <span id="totalTime">0:00</span>
+                            <span id="currentTime">0:00</span> / <span id="minusTime">-0:00</span> / <span id="totalTime">0:00</span>
                         </div>
-                        <audio id="currentAudio" src=".\Music\Kerbal Space Program\Brittle Rille.mp3"></audio>
+                        <audio id="currentAudio"></audio>
+                        <script>
+                            //player
+                            var playerState = 'paused'
+                            
+                            var currentAudio = document.getElementById('currentAudio'),
+                                pause = document.getElementById('paused'),
+                                next = document.getElementById('forward'),
+                                back = document.getElementById('back'),
+                                seek = document.getElementById('playerSeek'),
+                                currentTime = document.getElementById('currentTime'),
+                                totalTime = document.getElementById('totalTime'),
+                                minusTime = document.getElementById('minusTime')
+
+                            pause.onclick = function () {
+                                if (playerState == 'paused') {
+                                    currentAudio.play()
+                                    pause.textContent = "❚❚"
+                                    playerState = 'play'
+                                } else {
+                                    currentAudio.pause()
+                                    pause.textContent = "▶"
+                                    playerState = 'paused'
+                                }
+                                console.log(playerState)
+                            }
+
+                            next.onclick = function () {
+                                console.log('next')
+                            }
+
+                            back.onclick = function () {
+                                console.log('back')
+                            }
+
+                            seek.addEventListener('input', () => {
+                                currentTime.textContent = calculateTime(seek.value)
+                                minusTime.textContent = `-${calculateTime(seek.max - seek.value)}`
+                            })
+
+                            seek.addEventListener('change', () => {
+                                currentAudio.currentTime = seek.value
+                            })
+
+                            currentAudio.addEventListener('timeupdate', () => {
+                                seek.value = Math.floor(currentAudio.currentTime)
+                                currentTime.textContent = calculateTime(currentAudio.currentTime)
+                                minusTime.textContent = `-${calculateTime(currentAudio.duration - currentAudio.currentTime)}`
+                            })
+
+                            currentAudio.addEventListener('loadedmetadata', () => {
+                                seek.max = Math.floor(currentAudio.duration)
+                                totalTime.textContent = calculateTime(currentAudio.duration)
+                            });
+
+                            const calculateTime = (secs) => {
+                                const minutes = Math.floor(secs / 60);
+                                const seconds = Math.floor(secs % 60);
+                                const returnedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
+                                console.log(`time ${minutes}:${returnedSeconds}`)
+                                return `${minutes}:${returnedSeconds}`;
+                            }
+                        </script>
                     </div>
                 </div>
             </div>
@@ -160,7 +220,32 @@
                 <div class="queuecontainer">
                     <button class="buttontext" id="shuffle" type="button">Shuffle</button>
                     <button class="buttontext" id="loadFolder" type="button">Load Folder</button>
-                    <button class="buttontext" id="loadFiles" type="button">Load Files</button>
+                    <input class="buttontext" id="loadFiles" type="file" multiple accept="audio/*"> <!-- Load Files</input> -->
+                    <script>
+                        //uploader
+                        const album = document.getElementById('playingAlbum')
+                        const artist = document.getElementById('playingArtist')
+                        const title = document.getElementById('playingTitle')
+
+                        var fileList = []
+
+                        function setMusic(musicFile) {
+                            //var musicFile = document.getElementById("loadFiles").files[0];
+                            var musicPlayer = document.getElementById("currentAudio");
+                            musicPlayer.pause()
+                            pause.textContent = "▶"
+                            playerState = 'paused'
+                            musicPlayer.src = URL.createObjectURL(musicFile);
+                            title.textContent = musicFile.name
+                        }
+
+                        document.getElementById('loadFiles').addEventListener('change', function(e) {
+                            if (e.target.files) {
+                                fileList = (e.target.files)
+                                setMusic(fileList[0])
+                            }
+                        })
+                    </script>
                 </div>
                 <div class="queue">
                     <div class="queueblob">
@@ -171,62 +256,5 @@
                 </div>
             </div>
         </div>
-        <script>
-            //player
-            var playerState = 'paused'
-            
-            var currentAudio = document.getElementById('currentAudio'),
-                pause = document.getElementById('paused'),
-                next = document.getElementById('forward'),
-                back = document.getElementById('back'),
-                seek = document.getElementById('playerSeek'),
-                currentTime = document.getElementById('currentTime'),
-                totalTime = document.getElementById('totalTime')
-
-            pause.onclick = function () {
-                if (playerState == 'paused') {
-                    currentAudio.play()
-                    playerState = 'play'
-                } else {
-                    currentAudio.pause()
-                    playerState = 'paused'
-                }
-                console.log(playerState)
-            }
-
-            next.onclick = function () {
-                console.log('next')
-            }
-
-            back.onclick = function () {
-                console.log('back')
-            }
-
-            seek.addEventListener('input', () => {
-                currentTime.textContent = calculateTime(seek.value)
-            })
-
-            seek.addEventListener('change', () => {
-                currentAudio.currentTime = seek.value
-            })
-
-            currentAudio.addEventListener('timeupdate', () => {
-                seek.value = Math.floor(currentAudio.currentTime)
-                currentTime.textContent = calculateTime(currentAudio.currentTime)
-            })
-
-            currentAudio.addEventListener('loadedmetadata', () => {
-                seek.max = Math.floor(currentAudio.duration)
-                totalTime.textContent = calculateTime(currentAudio.duration)
-            });
-
-            const calculateTime = (secs) => {
-                const minutes = Math.floor(secs / 60);
-                const seconds = Math.floor(secs % 60);
-                const returnedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
-                console.log(`time ${minutes}:${returnedSeconds}`)
-                return `${minutes}:${returnedSeconds}`;
-            }
-        </script>
     </body>
 </html>
