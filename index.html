@@ -165,16 +165,16 @@
                                 minusTime = document.getElementById('minusTime')
 
                             pause.onclick = function () {
-                                if (playerState == 'paused') {
-                                    currentAudio.play()
-                                    pause.textContent = "❚❚"
-                                    playerState = 'play'
+                                if (currentAudio) {
+                                    if (playerState == 'paused') {
+                                        currentAudio.play()
+                                    } else {
+                                        currentAudio.pause()
+                                    }
                                 } else {
-                                    currentAudio.pause()
                                     pause.textContent = "▶"
                                     playerState = 'paused'
                                 }
-                                console.log(playerState)
                             }
 
                             next.onclick = function () {
@@ -205,11 +205,20 @@
                                 totalTime.textContent = calculateTime(currentAudio.duration)
                             });
 
+                            currentAudio.addEventListener('play', () => {
+                                pause.textContent = "❚❚"
+                                playerState = 'play'
+                            })
+
+                            currentAudio.addEventListener('pause', () => {
+                                pause.textContent = "▶"
+                                playerState = 'paused'
+                            })
+
                             const calculateTime = (secs) => {
                                 const minutes = Math.floor(secs / 60);
                                 const seconds = Math.floor(secs % 60);
                                 const returnedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
-                                console.log(`time ${minutes}:${returnedSeconds}`)
                                 return `${minutes}:${returnedSeconds}`;
                             }
                         </script>
@@ -233,8 +242,6 @@
                             //var musicFile = document.getElementById("loadFiles").files[0];
                             var musicPlayer = document.getElementById("currentAudio");
                             musicPlayer.pause()
-                            pause.textContent = "▶"
-                            playerState = 'paused'
                             musicPlayer.src = URL.createObjectURL(musicFile);
                             title.textContent = musicFile.name
                         }
