@@ -176,7 +176,7 @@
                     <button class="buttontext" id="shuffle" type="button" onclick="shufflePlaylist()">Shuffle</button>
                     <label class="buttontext">
                         Load Folder
-                        <input id="loadFiles" type="file" webkitdirectory directory multiple>
+                        <input id="loadFolders" type="file" webkitdirectory directory multiple>
                     </label>
                     <label class="buttontext">
                         Load Files
@@ -296,7 +296,17 @@
                             }
                         }
 
+                        document.getElementById('loadFolders').addEventListener('change', function(e) {
+                            console.log('files')
+                            if (e.target.files) {
+                                playlistIndex = 0
+                                fileList = Array.from(e.target.files)
+                                setMusic(fileList[playlistIndex])
+                            }
+                        })
+
                         document.getElementById('loadFiles').addEventListener('change', function(e) {
+                            console.log('files')
                             if (e.target.files) {
                                 playlistIndex = 0
                                 fileList = Array.from(e.target.files)
