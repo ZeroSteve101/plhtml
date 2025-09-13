@@ -1,6 +1,7 @@
 <!doctype HTML>
 <html>
     <head>
+        <script src=".\player\jsmediatags.min.js"></script>
         <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0"> 
         <title>player</title>
         <style>
@@ -93,7 +94,9 @@
                 background-color: darkblue;
                 border: 1px solid white;
                 color: white;
-                text-align: center;
+                justify-content: center;
+                vertical-align: bottom;
+                align-items: center;
             }
 			.buttonlarge {
 				height: 40px;
@@ -107,7 +110,8 @@
                 background-color: darkblue;
                 border: 1px solid white;
                 color: white;
-                text-align: center;
+                justify-content: center;
+                align-items: center;
             }
             .buttontext {
                 height: 20px;
@@ -153,16 +157,16 @@
             <div class="playerhalf">
                 <div class="player">
                     <div class="albumdiv">
-                        <img class="albumcover" src="placeholder.jpg">
+                        <img class="albumcover" id="albumcover" src=".\player\icon.png">
                     </div>
                     <div class="info">
                         <b id="playingTitle">TITLE</b><br>
                         <span id="playingArtist" style="font-size: 12px;">ARTIST</span> - <span id="playingAlbum" style="font-size: 12px;">ALBUM</span>
                     </div>
                     <div class="controls">
-                        <button class="buttonlarge" id="back" type="button">⏮</button>
+                        <button class="buttonlarge" id="back" type="button">«</button>
                         <button class="buttonlarge" id="paused" type="button">▶</button>
-                        <button class="buttonlarge" id="forward" type="button">⏭</button><br>
+                        <button class="buttonlarge" id="forward" type="button">»</button><br>
                         <input class="seek" id="playerSeek" type="range" min="0" max="100" value="0"><br>
                         <div class="playback">
                             <span id="currentTime">0:00</span> / <span id="minusTime">-0:00</span> / <span id="totalTime">0:00</span>
@@ -183,6 +187,7 @@
                         <input id="loadFiles" type="file" multiple accept="audio/*">
                     </label>
                     <script>
+                        var jsmediatags = window.jsmediatags
                         //player
                         var playerState = 'paused'
                         
@@ -198,6 +203,7 @@
                         const album = document.getElementById('playingAlbum')
                         const artist = document.getElementById('playingArtist')
                         const title = document.getElementById('playingTitle')
+                        const cover = document.getElementById('albumcover')
 
                         var fileList = []
                         var playlistIndex = 0
@@ -256,7 +262,7 @@
                         });
 
                         currentAudio.addEventListener('play', () => {
-                            pause.textContent = "❚❚"
+                            pause.textContent = "❙❙"
                             playerState = 'play'
                         })
 
@@ -285,8 +291,36 @@
 
                         function setMusic(musicFile) {
                             currentAudio.pause()
-                            currentAudio.src = URL.createObjectURL(musicFile);
-                            title.textContent = musicFile.name
+                            var musicURL = URL.createObjectURL(musicFile)
+                            currentAudio.src = musicURL;
+
+                            jsmediatags.read(musicFile, {
+                                onSuccess: (tag) => {
+                                    const tags = tag.tags
+                                    title.textContent = tags.title || musicFile.name
+                                    album.textContent = tags.album || ""
+                                    artist.textContent = tags.artist || ""
+
+                                    var picture = tags.picture
+
+                                    if (picture && picture != null) {
+                                        var base64String = "";
+                                        for (var i = 0; i < picture.data.length; i++) {
+                                            base64String += String.fromCharCode(picture.data[i]);
+                                        }
+                                        var imageUri = "data:" + picture.format + ";base64," + window.btoa(base64String);
+                                        cover.src = imageUri
+                                    } else {
+                                        cover.src = ".\\player\\icon.png"
+                                    }
+                                    console.log(cover.src)
+                                },
+                                onError: function() {
+                                    title.textContent = musicFile.name
+
+                                } 
+                            })
+
                             seek.value = 0
                             if (playerState == 'paused') {
                                 playerState = 'paused'
@@ -297,7 +331,6 @@
                         }
 
                         document.getElementById('loadFolders').addEventListener('change', function(e) {
-                            console.log('files')
                             if (e.target.files) {
                                 playlistIndex = 0
                                 fileList = Array.from(e.target.files)
@@ -306,7 +339,6 @@
                         })
 
                         document.getElementById('loadFiles').addEventListener('change', function(e) {
-                            console.log('files')
                             if (e.target.files) {
                                 playlistIndex = 0
                                 fileList = Array.from(e.target.files)
@@ -333,7 +365,7 @@
                 </div>
                 <div class="queue">
                     <div class="queueblob">
-                        <img class="smallcover" src="placeholder.jpg">
+                        <img class="smallcover" src=".\player\icon.png">
                         <b style="font-size: 20px;">TITLE</b><br>
                         <p5 style="font-size: 12px;">ARTIST - ALBUM</p5>
                     </div>
