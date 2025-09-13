@@ -171,7 +171,7 @@
                         <div class="playback">
                             <span id="currentTime">0:00</span> / <span id="minusTime">-0:00</span> / <span id="totalTime">0:00</span>
                         </div>
-                        <audio id="currentAudio"></audio>
+                        <audio id="currentAudio" preload="auto"></audio>
                     </div>
                 </div>
             </div>
@@ -180,7 +180,7 @@
                     <button class="buttontext" id="shuffle" type="button" onclick="shufflePlaylist()">Shuffle</button>
                     <label class="buttontext">
                         Load Folder
-                        <input id="loadFolders" type="file" webkitdirectory directory multiple>
+                        <input id="loadFolders" type="file" webkitdirectory directory multiple accept="audio/*">
                     </label>
                     <label class="buttontext">
                         Load Files
@@ -219,6 +219,7 @@
         const title = document.getElementById('playingTitle')
         const cover = document.getElementById('albumcover')
         const smallCover = document.getElementById('smallcover')
+        const number = document.getElementById('playingNumber')
 
         var fileList = []
         var playlistIndex = 0
@@ -313,8 +314,8 @@
                 onSuccess: (tag) => {
                     const tags = tag.tags
                     title.textContent = tags.title || musicFile.name
-                    album.textContent = tags.album || ""
                     artist.textContent = tags.artist || ""
+                    album.textContent = tags.album || ""
 
                     var picture = tags.picture
 
@@ -328,12 +329,14 @@
                     } else {
                         cover.src = placeholderCover
                     }
-                    console.log(cover.src)
                 },
                 onError: function() {
+                    console.log('metadata read error (is it a WAV file or smth?)')
                     title.textContent = musicFile.name
+                    artist.textContent = ""
+                    album.textContent = ""
                     cover.src = placeholderCover
-                } 
+                }
             })
 
             seek.value = 0
