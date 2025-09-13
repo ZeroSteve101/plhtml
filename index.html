@@ -101,6 +101,14 @@
 				font-size: 20px;
                 border-radius: 5px;
 			}
+            label {
+                padding-left: 5px;
+                padding-right: 5px;
+                background-color: darkblue;
+                border: 1px solid white;
+                color: white;
+                text-align: center;
+            }
             .buttontext {
                 height: 20px;
                 border-radius: 2px;
@@ -115,6 +123,12 @@
             button:active {
                 background-color: #5b5bff;
             }
+            label:hover {
+                background-color: blue;
+            }
+            label:active {
+                background-color: #5b5bff;
+            }
             .info {
                 text-align: center;
                 margin-top: 10px;
@@ -127,6 +141,9 @@
             }
             .playback {
                 font-family: monospace;
+            }
+            input[type="file"] {
+                display: none;
             }
         </style>
     </head>
@@ -144,114 +161,167 @@
                     </div>
                     <div class="controls">
                         <button class="buttonlarge" id="back" type="button">⏮</button>
-                        <button class="buttonlarge" id="paused" type="button">▶</button> <!-- <button class="buttonLarge" id="play" type="button">❚❚</button> -->
+                        <button class="buttonlarge" id="paused" type="button">▶</button>
                         <button class="buttonlarge" id="forward" type="button">⏭</button><br>
                         <input class="seek" id="playerSeek" type="range" min="0" max="100" value="0"><br>
                         <div class="playback">
                             <span id="currentTime">0:00</span> / <span id="minusTime">-0:00</span> / <span id="totalTime">0:00</span>
                         </div>
                         <audio id="currentAudio"></audio>
-                        <script>
-                            //player
-                            var playerState = 'paused'
-                            
-                            var currentAudio = document.getElementById('currentAudio'),
-                                pause = document.getElementById('paused'),
-                                next = document.getElementById('forward'),
-                                back = document.getElementById('back'),
-                                seek = document.getElementById('playerSeek'),
-                                currentTime = document.getElementById('currentTime'),
-                                totalTime = document.getElementById('totalTime'),
-                                minusTime = document.getElementById('minusTime')
-
-                            pause.onclick = function () {
-                                if (currentAudio) {
-                                    if (playerState == 'paused') {
-                                        currentAudio.play()
-                                    } else {
-                                        currentAudio.pause()
-                                    }
-                                } else {
-                                    pause.textContent = "▶"
-                                    playerState = 'paused'
-                                }
-                            }
-
-                            next.onclick = function () {
-                                console.log('next')
-                            }
-
-                            back.onclick = function () {
-                                console.log('back')
-                            }
-
-                            seek.addEventListener('input', () => {
-                                currentTime.textContent = calculateTime(seek.value)
-                                minusTime.textContent = `-${calculateTime(seek.max - seek.value)}`
-                            })
-
-                            seek.addEventListener('change', () => {
-                                currentAudio.currentTime = seek.value
-                            })
-
-                            currentAudio.addEventListener('timeupdate', () => {
-                                seek.value = Math.floor(currentAudio.currentTime)
-                                currentTime.textContent = calculateTime(currentAudio.currentTime)
-                                minusTime.textContent = `-${calculateTime(currentAudio.duration - currentAudio.currentTime)}`
-                            })
-
-                            currentAudio.addEventListener('loadedmetadata', () => {
-                                seek.max = Math.floor(currentAudio.duration)
-                                totalTime.textContent = calculateTime(currentAudio.duration)
-                            });
-
-                            currentAudio.addEventListener('play', () => {
-                                pause.textContent = "❚❚"
-                                playerState = 'play'
-                            })
-
-                            currentAudio.addEventListener('pause', () => {
-                                pause.textContent = "▶"
-                                playerState = 'paused'
-                            })
-
-                            const calculateTime = (secs) => {
-                                const minutes = Math.floor(secs / 60);
-                                const seconds = Math.floor(secs % 60);
-                                const returnedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
-                                return `${minutes}:${returnedSeconds}`;
-                            }
-                        </script>
                     </div>
                 </div>
             </div>
             <div class="queuehalf">
                 <div class="queuecontainer">
-                    <button class="buttontext" id="shuffle" type="button">Shuffle</button>
-                    <button class="buttontext" id="loadFolder" type="button">Load Folder</button>
-                    <input class="buttontext" id="loadFiles" type="file" multiple accept="audio/*"> <!-- Load Files</input> -->
+                    <label class="buttontext" id="shuffle">
+                        Shuffle
+                    </label>
+                    <button class="buttontext" id="shuffle" type="button" onclick="shufflePlaylist()">Shuffle</button>
+                    <label class="buttontext">
+                        Load Folder
+                        <input id="loadFiles" type="file" webkitdirectory directory multiple>
+                    </label>
+                    <label class="buttontext">
+                        Load Files
+                        <input id="loadFiles" type="file" multiple accept="audio/*">
+                    </label>
                     <script>
-                        //uploader
+                        //player
+                        var playerState = 'paused'
+                        
+                        var currentAudio = document.getElementById('currentAudio'),
+                            pause = document.getElementById('paused'),
+                            next = document.getElementById('forward'),
+                            back = document.getElementById('back'),
+                            seek = document.getElementById('playerSeek'),
+                            currentTime = document.getElementById('currentTime'),
+                            totalTime = document.getElementById('totalTime'),
+                            minusTime = document.getElementById('minusTime')
+                        
                         const album = document.getElementById('playingAlbum')
                         const artist = document.getElementById('playingArtist')
                         const title = document.getElementById('playingTitle')
 
                         var fileList = []
+                        var playlistIndex = 0
+
+                        pause.onclick = function () {
+                            if (currentAudio.readyState >= 3) {
+                                if (playerState == 'paused') {
+                                    currentAudio.play()
+                                } else {
+                                    currentAudio.pause()
+                                }
+                            } else {
+                                pause.textContent = "▶"
+                                playerState = 'paused'
+                            }
+                        }
+
+                        next.onclick = function () {
+                            if (playlistIndex < fileList.length - 1) {
+                                playlistIndex += 1
+                                setMusic(fileList[playlistIndex])
+                            } else {
+                                playlistIndex = 0
+                                setMusic(fileList[playlistIndex])
+                            }
+                        }
+
+                        back.onclick = function () {
+                            if (playlistIndex > 0) {
+                                playlistIndex -= 1
+                                setMusic(fileList[playlistIndex])
+                            } else {
+                                playlistIndex = fileList.length
+                                setMusic(fileList[playlistIndex])
+                            }
+                        }
+
+                        seek.addEventListener('input', () => {
+                            currentTime.textContent = calculateTime(seek.value)
+                            minusTime.textContent = `-${calculateTime(seek.max - seek.value)}`
+                        })
+
+                        seek.addEventListener('change', () => {
+                            currentAudio.currentTime = seek.value
+                        })
+
+                        currentAudio.addEventListener('timeupdate', () => {
+                            seek.value = Math.floor(currentAudio.currentTime)
+                            currentTime.textContent = calculateTime(currentAudio.currentTime)
+                            minusTime.textContent = `-${calculateTime(currentAudio.duration - currentAudio.currentTime)}`
+                        })
+
+                        currentAudio.addEventListener('loadedmetadata', () => {
+                            seek.max = Math.floor(currentAudio.duration)
+                            totalTime.textContent = calculateTime(currentAudio.duration)
+                        });
+
+                        currentAudio.addEventListener('play', () => {
+                            pause.textContent = "❚❚"
+                            playerState = 'play'
+                        })
+
+                        currentAudio.addEventListener('pause', () => {
+                            pause.textContent = "▶"
+                            playerState = 'paused'
+                        })
+
+                        currentAudio.addEventListener("ended", function(){
+                            currentAudio.currentTime = 0;
+                            if (playlistIndex < fileList.length) {
+                                playlistIndex += 1
+                            } else {
+                                playlistIndex = 0
+                            }
+                            setMusic(fileList[playlistIndex])
+                            currentAudio.play()
+                        });
+
+                        const calculateTime = (secs) => {
+                            const minutes = Math.floor(secs / 60);
+                            const seconds = Math.floor(secs % 60);
+                            const returnedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
+                            return `${minutes}:${returnedSeconds}`;
+                        }
 
                         function setMusic(musicFile) {
-                            //var musicFile = document.getElementById("loadFiles").files[0];
-                            var musicPlayer = document.getElementById("currentAudio");
-                            musicPlayer.pause()
-                            musicPlayer.src = URL.createObjectURL(musicFile);
+                            currentAudio.pause()
+                            currentAudio.src = URL.createObjectURL(musicFile);
                             title.textContent = musicFile.name
+                            seek.value = 0
+                            if (playerState == 'paused') {
+                                playerState = 'paused'
+                                pause.textContent = "▶"
+                            } else {
+                                currentAudio.play()
+                            }
                         }
 
                         document.getElementById('loadFiles').addEventListener('change', function(e) {
                             if (e.target.files) {
-                                fileList = (e.target.files)
-                                setMusic(fileList[0])
+                                playlistIndex = 0
+                                fileList = Array.from(e.target.files)
+                                setMusic(fileList[playlistIndex])
                             }
                         })
+
+                        function shufflePlaylist() {
+                            console.log(fileList)
+                            fileList = shuffleArray(fileList)
+                            console.log(fileList)
+                            playlistIndex = 0
+                            setMusic(fileList[playlistIndex])
+                        }
+
+                        function shuffleArray(array) {
+                            for (let i = array.length - 1; i > 0; i--) {
+                                const j = Math.floor(Math.random() * (i + 1));
+                                [array[i], array[j]] = [array[j], array[i]];
+                            }
+                            return array;
+                        }
                     </script>
                 </div>
                 <div class="queue">
