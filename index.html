@@ -12,8 +12,19 @@
                 background-color: black;
                 color: white;
             }
-            b {
-                font-size: 20px;
+            .smalltitle, .smallinfo {
+                overflow: hidden;
+                white-space: nowrap; 
+                text-overflow: ellipsis; 
+            }
+            .smalltitle {
+                font-size: 15px; 
+                margin-top: 5px;
+                font-weight: bold;
+            }
+            .smallinfo {
+                font-size: 12px;
+                font-weight: lighter;
             }
             .playerbox {
                 background-color: #111111;
@@ -54,6 +65,11 @@
                 height: 50px;
                 border: 1px solid grey;
                 border-radius: 5px;
+                max-width: calc(35vw - 12px);
+                max-height: 50px;
+            }
+            .select {
+                background-color: darkblue;
             }
             .smallcover {
                 max-height: 100%;
@@ -141,7 +157,7 @@
                 padding-right: 15px;
                 overflow: hidden;
                 white-space: nowrap;
-                text-overflow: clip;
+                text-overflow: ellipsis;
             }
             .playback {
                 font-family: monospace;
@@ -186,13 +202,10 @@
                         Load Files
                         <input id="loadFiles" type="file" multiple accept="audio/*">
                     </label>
+                    <button class="buttontext" id="clearqueue" type="button" onclick="clearQueue()">Dump Queue</button>
                 </div>
-                <div class="queue">
-                    <div class="queueblob">
-                        <img class="smallcover" id="smallcover" src="">
-                        <b style="font-size: 20px;">TITLE</b><br>
-                        <p5 style="font-size: 12px;">ARTIST - ALBUM</p5>
-                    </div>
+                <div class="queue" id="queue">
+                    Add some audio files to get started!
                 </div>
             </div>
         </div>
@@ -219,7 +232,7 @@
         const title = document.getElementById('playingTitle')
         const cover = document.getElementById('albumcover')
         const smallCover = document.getElementById('smallcover')
-        const number = document.getElementById('playingNumber')
+        const queueList = document.getElementById('queue')
 
         var fileList = []
         var playlistIndex = 0
@@ -238,23 +251,11 @@
         }
 
         next.onclick = function () {
-            if (playlistIndex < fileList.length - 1) {
-                playlistIndex += 1
-                setMusic(fileList[playlistIndex])
-            } else {
-                playlistIndex = 0
-                setMusic(fileList[playlistIndex])
-            }
+            musicChange(1)
         }
 
         back.onclick = function () {
-            if (playlistIndex > 0) {
-                playlistIndex -= 1
-                setMusic(fileList[playlistIndex])
-            } else {
-                playlistIndex = fileList.length
-                setMusic(fileList[playlistIndex])
-            }
+            musicChange(-1)
         }
 
         seek.addEventListener('input', () => {
@@ -289,12 +290,7 @@
 
         currentAudio.addEventListener("ended", function(){
             currentAudio.currentTime = 0;
-            if (playlistIndex < fileList.length) {
-                playlistIndex += 1
-            } else {
-                playlistIndex = 0
-            }
-            setMusic(fileList[playlistIndex])
+            musicChange(1)
             currentAudio.play()
         });
 
@@ -303,6 +299,37 @@
             const seconds = Math.floor(secs % 60);
             const returnedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
             return `${minutes}:${returnedSeconds}`;
+        }
+
+        function musicChange (amt) {
+            var current = document.getElementById(playlistIndex)
+            current.className = 'queueblob'
+
+            if ((playlistIndex + amt) < 0) {
+                playlistIndex = fileList.length
+            } else if (playlistIndex + amt > fileList.length - 1) {
+                playlistIndex = 0
+            } else {
+                playlistIndex += amt
+            }
+
+            var next = document.getElementById(playlistIndex)
+            next.className = 'queueblob select'
+            next.scrollIntoView()
+
+            setMusic(fileList[playlistIndex])
+        }
+
+        function changeTo (index) {
+            var current = document.getElementById(playlistIndex)
+            current.className = 'queueblob'
+
+            playlistIndex = index
+
+            var next = document.getElementById(playlistIndex)
+            next.className = 'queueblob select'
+
+            setMusic(fileList[playlistIndex])
         }
 
         function setMusic(musicFile) {
@@ -353,6 +380,7 @@
                 playlistIndex = 0
                 fileList = Array.from(e.target.files)
                 setMusic(fileList[playlistIndex])
+                setQueue()
             }
         })
 
@@ -361,8 +389,81 @@
                 playlistIndex = 0
                 fileList = Array.from(e.target.files)
                 setMusic(fileList[playlistIndex])
+                setQueue()
             }
         })
+
+        function setQueue() {
+            queueList.innerHTML = ''
+
+            if (!fileList.length) {
+                queueList.appendChild(document.createTextNode('Nothing Loaded, Bozo'))
+                return
+            }
+
+            fileList.forEach((fileIndex, pos) => {
+                const file = fileList[pos]
+                var newBlob = queueList.appendChild(document.createElement('div'))
+                newBlob.className = 'queueblob' + (pos == playlistIndex? ' select':'')
+                newBlob.addEventListener('click', function (event) {changeTo(pos)})
+                newBlob.id = pos
+
+                var blobTitle = ''
+                var blobArtist = ''
+                var blobAlbum = ''
+
+                var blobImg = document.createElement('img')
+                blobImg.className = 'smallcover'
+                newBlob.appendChild(blobImg)
+
+                var newTitle = document.createElement('div')
+                newTitle.className = 'smalltitle'
+                newBlob.appendChild(newTitle)
+                //newBlob.appendChild(document.createElement('br'))
+
+                var newInfo = document.createElement('div')
+                newInfo.className = 'smallinfo'
+                newBlob.appendChild(newInfo)
+
+                jsmediatags.read(file, {
+                    onSuccess: (tag) => {
+                        const tags = tag.tags
+                        newTitle.textContent = tags.title || file.name
+                        blobArtist = tags.artist || ""
+                        blobAlbum = tags.album || ""
+
+                        newInfo.textContent = blobArtist + ' - ' + blobAlbum
+
+                        var picture = tags.picture
+
+                        if (picture && picture != null) {
+                            var base64String = "";
+                            for (var i = 0; i < picture.data.length; i++) {
+                                base64String += String.fromCharCode(picture.data[i]);
+                            }
+                            var imageUri = "data:" + picture.format + ";base64," + window.btoa(base64String);
+                            blobImg.src = imageUri
+                        } else {
+                            blobImg.src = placeholderCover
+                        }
+                    },
+                    onError: function() {
+                        console.log('metadata read error (is it a WAV file or smth?)')
+                        newTitle.textContent = file.name
+                        blobImg.src = placeholderCover
+                        newInfo.textContent = ''
+                    }
+                })
+            })
+            if (document.getElementById(0)) {
+                document.getElementById(0).scrollIntoView()
+            }
+        }
+
+        function clearQueue() {
+            fileList = []
+            setQueue()
+        }
 
         function shufflePlaylist() {
             console.log(fileList)
@@ -370,6 +471,7 @@
             console.log(fileList)
             playlistIndex = 0
             setMusic(fileList[playlistIndex])
+            setQueue()
         }
 
         function shuffleArray(array) {
@@ -381,7 +483,6 @@
         }
 
         cover.src = placeholderCover
-        smallCover.src = placeholderCover
     </script>
     <script>
         //jsmediatags
