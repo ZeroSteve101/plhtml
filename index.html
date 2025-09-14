@@ -31,7 +31,7 @@
                 height: 90vh;
                 width: 70%;
                 min-height: 200px;
-                min-width: 512px;
+                min-width: 600px;
                 border: 1px solid grey;
                 margin: auto;
                 margin-top: 25px;
@@ -92,7 +92,8 @@
 				padding-top: 20px;
 			}
             .albumcover {
-                height: calc(50vh - 30px);
+                max-height: calc(50vh - 30px);
+                max-width: 80%;
                 display: block; 
                 margin: auto;
                 border: 1px solid grey; 
@@ -306,7 +307,7 @@
             current.className = 'queueblob'
 
             if ((playlistIndex + amt) < 0) {
-                playlistIndex = fileList.length
+                playlistIndex = fileList.length - 1
             } else if (playlistIndex + amt > fileList.length - 1) {
                 playlistIndex = 0
             } else {
