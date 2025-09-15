@@ -178,7 +178,7 @@
                     </div>
                     <div class="info">
                         <b id="playingTitle">TITLE</b><br>
-                        <span id="playingArtist" style="font-size: 12px;">ARTIST</span> - <span id="playingAlbum" style="font-size: 12px;">ALBUM</span>
+                        <span id="playingArtist" style="font-size: 12px;">ARTIST/ALBUM</span>
                     </div>
                     <div class="controls">
                         <button class="buttonlarge" id="back" type="button">«</button>
@@ -303,8 +303,10 @@
         }
 
         function musicChange (amt) {
-            var current = document.getElementById(playlistIndex)
-            current.className = 'queueblob'
+            if (playlistIndex >= 0) {
+                var current = document.getElementById(playlistIndex)
+                current.className = 'queueblob'
+            }
 
             if ((playlistIndex + amt) < 0) {
                 playlistIndex = fileList.length - 1
@@ -342,8 +344,17 @@
                 onSuccess: (tag) => {
                     const tags = tag.tags
                     title.textContent = tags.title || musicFile.name
-                    artist.textContent = tags.artist || ""
-                    album.textContent = tags.album || ""
+
+                    if (tags.artist && tags.album) {
+                        artist.textContent = tags.artist + ' - ' + tags.album
+                    } else {
+                        artist.textContent = tags.artist || tags.album || ""
+                    }
+                    
+                    document.title = tags.title || musicFile.name
+                    if (tags.artist || tags.album) {
+                        document.title = document.title + ' - ' + (tags.artist || tags.album)
+                    }
 
                     var picture = tags.picture
 
@@ -362,7 +373,6 @@
                     console.log('metadata read error (is it a WAV file or smth?)')
                     title.textContent = musicFile.name
                     artist.textContent = ""
-                    album.textContent = ""
                     cover.src = placeholderCover
                 }
             })
@@ -378,18 +388,16 @@
 
         document.getElementById('loadFolders').addEventListener('change', function(e) {
             if (e.target.files) {
-                playlistIndex = 0
+                playlistIndex = -1
                 fileList = Array.from(e.target.files)
-                setMusic(fileList[playlistIndex])
                 setQueue()
             }
         })
 
         document.getElementById('loadFiles').addEventListener('change', function(e) {
             if (e.target.files) {
-                playlistIndex = 0
+                playlistIndex = -1
                 fileList = Array.from(e.target.files)
-                setMusic(fileList[playlistIndex])
                 setQueue()
             }
         })
@@ -420,7 +428,6 @@
                 var newTitle = document.createElement('div')
                 newTitle.className = 'smalltitle'
                 newBlob.appendChild(newTitle)
-                //newBlob.appendChild(document.createElement('br'))
 
                 var newInfo = document.createElement('div')
                 newInfo.className = 'smallinfo'
@@ -430,10 +437,12 @@
                     onSuccess: (tag) => {
                         const tags = tag.tags
                         newTitle.textContent = tags.title || file.name
-                        blobArtist = tags.artist || ""
-                        blobAlbum = tags.album || ""
 
-                        newInfo.textContent = blobArtist + ' - ' + blobAlbum
+                        if (tags.artist && tags.album) {
+                            newInfo.textContent = tags.artist + ' - ' + tags.album
+                        } else {
+                            newInfo.textContent = tags.artist || tags.album || ""
+                        }
 
                         var picture = tags.picture
 
@@ -467,11 +476,9 @@
         }
 
         function shufflePlaylist() {
-            console.log(fileList)
             fileList = shuffleArray(fileList)
-            console.log(fileList)
-            playlistIndex = 0
-            setMusic(fileList[playlistIndex])
+            playlistIndex = -1
+            //setMusic(fileList[playlistIndex])
             setQueue()
         }
 
