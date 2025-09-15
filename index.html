@@ -324,9 +324,11 @@
         }
 
         function changeTo (index) {
-            var current = document.getElementById(playlistIndex)
-            current.className = 'queueblob'
-
+            if (playlistIndex >= 0) {
+                var current = document.getElementById(playlistIndex)
+                current.className = 'queueblob'
+            }
+            
             playlistIndex = index
 
             var next = document.getElementById(playlistIndex)
@@ -388,16 +390,14 @@
 
         document.getElementById('loadFolders').addEventListener('change', function(e) {
             if (e.target.files) {
-                playlistIndex = -1
-                fileList = Array.from(e.target.files)
+                fileList = fileList.concat(Array.from(e.target.files))
                 setQueue()
             }
         })
 
         document.getElementById('loadFiles').addEventListener('change', function(e) {
             if (e.target.files) {
-                playlistIndex = -1
-                fileList = Array.from(e.target.files)
+                fileList = fileList.concat(Array.from(e.target.files))
                 setQueue()
             }
         })
@@ -472,13 +472,13 @@
 
         function clearQueue() {
             fileList = []
+            playlistIndex = -1
             setQueue()
         }
 
         function shufflePlaylist() {
             fileList = shuffleArray(fileList)
             playlistIndex = -1
-            //setMusic(fileList[playlistIndex])
             setQueue()
         }
 
