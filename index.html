@@ -236,7 +236,7 @@
         const queueList = document.getElementById('queue')
 
         var fileList = []
-        var playlistIndex = -1
+        var playlistIndex = -2
 
         pause.onclick = function () {
             if (currentAudio.readyState >= 3) {
@@ -391,6 +391,10 @@
         document.getElementById('loadFolders').addEventListener('change', function(e) {
             if (e.target.files) {
                 fileList = fileList.concat(Array.from(e.target.files))
+                if (playlistIndex == -2) {
+                    setMusic(fileList[0])
+                    playlistIndex = 0
+                }
                 setQueue()
             }
         })
@@ -398,6 +402,10 @@
         document.getElementById('loadFiles').addEventListener('change', function(e) {
             if (e.target.files) {
                 fileList = fileList.concat(Array.from(e.target.files))
+                if (playlistIndex == -2) {
+                    setMusic(fileList[0])
+                    playlistIndex = 0
+                }
                 setQueue()
             }
         })
