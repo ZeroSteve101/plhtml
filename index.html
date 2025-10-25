@@ -437,10 +437,10 @@
             var musicURL = URL.createObjectURL(musicFile)
             currentAudio.src = musicURL;
 
-            seek.value = 0
+            seek.value = 0;
 
             gainNode.gain.value = 0.75
-            audioCtx.resume()       
+            audioCtx.resume()
 
             if (playerState == 'paused') {
                 playerState = 'paused'
@@ -453,23 +453,12 @@
             (async () => {
                 try {
                     var metadata = await meta.parseBlob(musicFile);
-
+                    
                     errormsg.textContent = ''
 
                     data.textContent = metadata.format.codec + ' | ' + metadata.format.sampleRate + ' Hz | ' + (Math.round(parseInt(metadata.format.bitrate) / 1000)) + ' kbps'
                     
                     metadata = metadata.common
-
-                    title.textContent = metadata.title || musicFile.name
-                    artist.textContent = metadata.artist || ''
-                    album.textContent = metadata.album || ''
-
-                    var titleStr = metadata.title || musicFile.name
-                    if (metadata.artist || metadata.album) {
-                        titleStr += ' - '
-                        titleStr += metadata.artist || metadata.album
-                    }
-                    document.title = titleStr
 
                     if (metadata.replaygain_album_gain) {
                         var gain = 0.75 * (10 ** (metadata.replaygain_album_gain.dB / 20))
@@ -484,67 +473,100 @@
                     
                     gainNode.gain.value = gain
                     audioCtx.resume()
-                    console.log(gain)
+                    console.log('1')
+                } catch (error) {
+                    console.error('rg err: ' + error.message)
+                }
+                try {
+                    if (!metadata) {
+                        var metadata = await meta.parseBlob(musicFile);
+                        metadata = metadata.common
+                    }
+                    
+                    if (metadata.artists) {
+                        var artistList = metadata.artists.join(', ')
+                    } else {
+                        var artistList = metadata.artist
+                    }
+
+                    title.textContent = metadata.title || musicFile.name
+                    artist.textContent = artistList || ''
+                    album.textContent = metadata.album || ''
+
+                    var titleStr = metadata.title || musicFile.name
+                    if (artistList || metadata.album) {
+                        titleStr += ' - '
+                        titleStr += artistList || metadata.album
+                    }
+                    document.title = titleStr
                     
                     var mmeta = new MediaMetadata({
                         title: metadata.title || musicFile.name,
-                        artist: metadata.artist || '',
+                        artist: artistList || metadata.artist || '',
                         album: metadata.album || '',
                     })
-
-                    try {
-                        if (metadata.picture) {
-                            var picture = meta.selectCover(metadata.picture)
-
-                            //var imageData = `data:${picture.format};base64,${picture.data.toBase64()}`;
-                            var base64String = "";
-                            for (var i = 0; i < picture.data.length; i++) {
-                                base64String += String.fromCharCode(picture.data[i]);
-                            }
-                            var imageData = "data:" + picture.format + ";base64," + window.btoa(base64String);
-
-                            cover.src = imageData
-
-                            var smallImage = imageData
-
-                            if (imageData.length > 2000) {
-                                smallImage = resizeImage(cover)
-                            }
-                            
-                            mmeta.artwork = [
-                                {
-                                    src: smallImage,
-                                }
-                            ]
-                        } else {
-                            cover.src = placeholderCover
-                            mmeta.artwork = [
-                                {
-                                    src: placeholderCover,
-                                }
-                            ]
-                        }
-                    } catch (error) {
-                        console.error('Error parsing image:', error.message)
-                        errormsg.textContent = error.message
-                        cover.src = placeholderCover
-                        mmeta.artwork = [
-                                {
-                                    src: placeholderCover,
-                                }
-                        ]
-                        //setColor([0,0,139])
-                    }
-                    navigator.mediaSession.metadata = mmeta
+                    
+                    console.log('2')
                 } catch (error) {
                     console.error('Error parsing metadata:', error.message);
-                    data.textContent = ''
-                    errormsg.textContent = error.message
+                    data.textContent = error.message
                     cover.src = placeholderCover
                     title.textContent = musicFile.name
                     document.title = musicFile.name
                     artist.textContent = ''
                     album.textContent = ''
+                }
+                try {
+                    if (!metadata) {
+                        var metadata = await meta.parseBlob(musicFile);
+                        metadata = metadata.common
+                    }
+                    
+                    if (metadata.picture) {
+                        var picture = meta.selectCover(metadata.picture)
+
+                        //var imageData = `data:${picture.format};base64,${picture.data.toBase64()}`;
+                        var base64String = "";
+                        for (var i = 0; i < picture.data.length; i++) {
+                            base64String += String.fromCharCode(picture.data[i]);
+                        }
+                        var imageData = "data:" + picture.format + ";base64," + window.btoa(base64String);
+
+                        cover.src = imageData
+
+                        var smallImage = imageData
+
+                        if (imageData.length > 2000) {
+                            smallImage = resizeImage(cover)
+                        }
+                        
+                        mmeta.artwork = [
+                            {
+                                src: smallImage,
+                            }
+                        ]
+                    } else {
+                        cover.src = placeholderCover
+
+                        mmeta.artwork = [
+                            {
+                                src: placeholderCover,
+                            }
+                        ]
+                    }
+                    
+                    navigator.mediaSession.metadata = mmeta
+                    console.log(3)
+                } catch (error) {
+                    console.error('Error parsing image:', error.message)
+                    data.textContent = error.message
+                    cover.src = placeholderCover
+                    
+                    mmeta.artwork = [
+                            {
+                                src: placeholderCover,
+                            }
+                    ]
                     //setColor([0,0,139])
                 }
             })();
@@ -706,10 +728,16 @@
 
                     newTitle.textContent = metadata.title || musicFile.name
 
-                    if (metadata.artist && metadata.album) {
-                        newInfo.textContent = metadata.album + ' - ' + metadata.artist
+                    if (metadata.artists) {
+                        var artistList = metadata.artists.join(', ')
                     } else {
-                        newInfo.textContent = metadata.artist || metadata.album || ""
+                        var artistList = metadata.artist
+                    }
+
+                    if (metadata.album && artistList) {
+                        newInfo.textContent = metadata.album + ' - ' + artistList
+                    } else {
+                        newInfo.textContent = artistList || metadata.album || ""
                     }
 
                     try {
