@@ -439,15 +439,7 @@
 
             seek.value = 0;
 
-            gainNode.gain.value = 0.75
-            audioCtx.resume()
-
-            if (playerState == 'paused') {
-                playerState = 'paused'
-                pause.textContent = "▶"
-            } else {
-                currentAudio.play()
-            }
+            
 
             //music-metadata
             (async () => {
@@ -474,8 +466,23 @@
                     gainNode.gain.value = gain
                     audioCtx.resume()
                     console.log('1')
+                    if (playerState == 'paused') {
+                        playerState = 'paused'
+                        pause.textContent = "▶"
+                    } else {
+                        currentAudio.play()
+                    }
                 } catch (error) {
                     console.error('rg err: ' + error.message)
+                    gainNode.gain.value = 0.75
+                    audioCtx.resume()
+
+                    if (playerState == 'paused') {
+                        playerState = 'paused'
+                        pause.textContent = "▶"
+                    } else {
+                        currentAudio.play()
+                    }
                 }
                 try {
                     if (!metadata) {
