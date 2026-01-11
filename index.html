@@ -528,39 +528,40 @@
 
                     //class select
 
-                    if (metadata.lyrics[0].syncText) {
+                    if (metadata.lyrics) {
                         lyrics.innerHTML = ''
-                        var lyricsArray = metadata.lyrics[0].syncText
-                        lyricsArray.forEach ((lyricline,pos) => {
+                        if (metadata.lyrics[0].syncText) {
+                            var lyricsArray = metadata.lyrics[0].syncText
+                            lyricsArray.forEach ((lyricline,pos) => {
+                                const newLyric = document.createElement('div');
+                                newLyric.id = `lyric ${pos}`
+
+                                const time = document.createElement('div');
+                                time.style = 'display: none;'
+                                time.innerHTML = lyricline.timestamp;
+                                
+                                const text = document.createElement('div')
+                                text.innerHTML = lyricline.text
+
+                                if (lyricline.text) {
+                                    newLyric.style = "padding: 3px 10px;"
+                                }
+
+                                newLyric.appendChild(time);
+                                newLyric.appendChild(text)
+                                lyrics.appendChild(newLyric)
+                            })
+                            lyricLen = lyricsArray.length
+                        } /**else {
                             const newLyric = document.createElement('div');
-                            newLyric.id = `lyric ${pos}`
-
-                            const time = document.createElement('div');
-                            time.style = 'display: none;'
-                            time.innerHTML = lyricline.timestamp;
-                            
-                            const text = document.createElement('div')
-                            text.innerHTML = lyricline.text
-
+                            newLyric.id = `lyric ${pos}`;
+                            newLyric.innerHTML = `${lyricline.text}`
                             if (lyricline.text) {
                                 newLyric.style = "padding: 3px 10px;"
                             }
-
-                            newLyric.appendChild(time);
-                            newLyric.appendChild(text)
                             lyrics.appendChild(newLyric)
-                        })
-                        lyricLen = lyricsArray.length
-                    } /**else if (metadata.lyrics) {
-                        lyrics.innerHTML = ''
-                        const newLyric = document.createElement('div');
-                        newLyric.id = `lyric ${pos}`;
-                        newLyric.innerHTML = `${lyricline.text}`
-                        if (lyricline.text) {
-                            newLyric.style = "padding: 3px 10px;"
-                        }
-                        lyrics.appendChild(newLyric)
-                    }**/
+                        }**/
+                    }
                     
                     var mmeta = new MediaMetadata({
                         title: metadata.title || musicFile.name,
