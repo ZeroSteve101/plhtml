@@ -530,7 +530,7 @@
 
                     if (metadata.lyrics) {
                         lyrics.innerHTML = ''
-                        if (metadata.lyrics[0].syncText) {
+                        if (metadata.lyrics[0].syncText != "") {
                             var lyricsArray = metadata.lyrics[0].syncText
                             lyricsArray.forEach ((lyricline,pos) => {
                                 const newLyric = document.createElement('div');
@@ -544,7 +544,7 @@
                                 text.innerHTML = lyricline.text
 
                                 if (lyricline.text) {
-                                    newLyric.style = "padding: 3px 10px;"
+                                    newLyric.style = "padding: 3px 10px; white-space: pre-wrap;"
                                 }
 
                                 newLyric.appendChild(time);
@@ -552,15 +552,13 @@
                                 lyrics.appendChild(newLyric)
                             })
                             lyricLen = lyricsArray.length
-                        } /**else {
+                        } else {
                             const newLyric = document.createElement('div');
-                            newLyric.id = `lyric ${pos}`;
-                            newLyric.innerHTML = `${lyricline.text}`
-                            if (lyricline.text) {
-                                newLyric.style = "padding: 3px 10px;"
-                            }
+                            newLyric.id = `lyric 0`;
+                            newLyric.innerHTML = metadata.lyrics[0].text
+                            newLyric.style = "padding: 3px 10px; white-space: pre-wrap;"
                             lyrics.appendChild(newLyric)
-                        }**/
+                        }
                     }
                     
                     var mmeta = new MediaMetadata({
