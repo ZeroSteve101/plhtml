@@ -249,11 +249,11 @@
                     <button class="buttontext" id="lyricstoggle" type="button" onclick="toggleLyrics()">Lyrics</button>
                     <button class="buttontext" id="clearqueue" type="button" onclick="clearQueue()">Dump Queue</button>
                 </div>
-                <div class="queue" id="queue">
-                    Add some audio files to get started!
-                </div>
                 <div class="lyrics" id="lyrics" style="text-align: center; ">
                     Lyrics go here
+                </div>
+                <div class="queue" id="queue">
+                    Add some audio files to get started!
                 </div>
             </div>
         </div>
@@ -462,6 +462,7 @@
             currentAudio.src = musicURL;
 
             seek.value = 0;
+            lyrics.scrollTop = 0;
 
             
 
