@@ -50,7 +50,16 @@
                 margin-left: 10px;
                 margin-top: 15px;
                 margin-right: 45px;
-                height: 95%;
+                height: 60%;
+                overflow: scroll;
+                border-radius: 1%;
+                border: 1px solid grey;
+            }
+            .lyrics {
+                margin-left: 10px;
+                margin-top: 15px;
+                margin-right: 45px;
+                height: 30%;
                 overflow: scroll;
                 border-radius: 1%;
                 border: 1px solid grey;
@@ -243,8 +252,8 @@
                 <div class="queue" id="queue">
                     Add some audio files to get started!
                 </div>
-                <div class="queue" id="lyrics" style="display: none; text-align: center; ">
-                    Lyrics go here smh...
+                <div class="lyrics" id="lyrics" style="text-align: center; ">
+                    Lyrics go here
                 </div>
             </div>
         </div>
@@ -277,7 +286,7 @@
         
         //player
         var playerState = 'paused'
-        var lyricstate = false
+        var lyricstate = true
         
         const currentAudio = document.getElementById('currentAudio'),
             pause = document.getElementById('paused'),
@@ -873,11 +882,11 @@
         function toggleLyrics() {
             if (lyricstate) {
                 lyricstate = false
-                queue.style.setProperty('display', "")
+                queue.style.setProperty('height',"95%")
                 lyrics.style.setProperty('display', "none")
             } else {
                 lyricstate = true
-                queue.style.setProperty('display', "none")
+                queue.style.setProperty('height', "60%")
                 lyrics.style.setProperty('display', "")
             }
         }
