@@ -67,6 +67,7 @@
                 border-radius: 5px;
                 max-width: calc(35vw - 12px);
                 max-height: 50px;
+                background-color: #222222;
                 cursor: pointer;
             }
             .select {
@@ -278,7 +279,7 @@
         var playerState = 'paused'
         var lyricstate = false
         
-        var currentAudio = document.getElementById('currentAudio'),
+        const currentAudio = document.getElementById('currentAudio'),
             pause = document.getElementById('paused'),
             next = document.getElementById('forward'),
             back = document.getElementById('back'),
@@ -539,12 +540,14 @@
                                 const time = document.createElement('div');
                                 time.style = 'display: none;'
                                 time.innerHTML = lyricline.timestamp;
+                                console.log(currentAudio.currentTime)
+                                newLyric.setAttribute('onClick', `console.log(currentAudio.currentTime); currentAudio.currentTime = ${lyricline.timestamp/1000}`)
                                 
                                 const text = document.createElement('div')
                                 text.innerHTML = lyricline.text
 
                                 if (lyricline.text) {
-                                    newLyric.style = "padding: 3px 10px; white-space: pre-wrap;"
+                                    newLyric.style = "padding: 3px 10px; white-space: pre-wrap; cursor: pointer;"
                                 }
 
                                 newLyric.appendChild(time);
