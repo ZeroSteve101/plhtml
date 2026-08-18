@@ -464,7 +464,7 @@
             seek.value = 0;
             lyrics.scrollTop = 0;
 
-            
+            console.log('before');
 
             //music-metadata
             (async () => {
@@ -478,7 +478,16 @@
                     lyrics.innerHTML = "[No Lyrics]"
                     lyricLen = 0
 
-                    data.textContent = metadata.format.codec + ' | ' + metadata.format.sampleRate + ' Hz | ' + (Math.round(parseInt(metadata.format.bitrate) / 1000)) + ' kbps'
+                    data.textContent = metadata.format.codec
+                    if (metadata.format.bitsPerSample) {
+                        data.textContent += ' | ' + metadata.format.bitsPerSample + ' Bit '
+                    }
+                    if (metadata.format.sampleRate) {
+                        data.textContent += ' | ' + metadata.format.sampleRate + ' Hz ' 
+                    }
+                    if (metadata.format.bitrate) {
+                        data.textContent += ' | ' + (Math.round(parseInt(metadata.format.bitrate) / 1000)) + ' kbps'
+                    }
                     
                     metadata = metadata.common
 
