@@ -319,6 +319,49 @@
         var fileList = []
         var playlistIndex = -2
 
+
+        //start ffmpeg
+        //inFile - input filedata
+        //inFileName - name of input file with extension
+        //procAudioURL - url of finished opus file
+
+
+        function transcodeFile(inFile) {
+            const [loaded, setLoaded] = useState(false);
+            const ffmpegRef = useRef(new FFmpeg());
+            const videoRef = useRef(null);
+            const messageRef = useRef(null);
+
+            const load = async () => {
+                const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd'
+                const ffmpeg = ffmpegRef.current;
+                ffmpeg.on('log', ({ message }) => {
+                    messageRef.current.innerHTML = message;
+                    console.log(message);
+                });
+                // toBlobURL is used to bypass CORS issue, urls with the same
+                // domain can be used directly.
+                await ffmpeg.load({
+                    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+                    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+                });
+                setLoaded(true);
+            }
+
+            const transcode = async () => {
+                const ffmpeg = ffmpegRef.current;
+                await ffmpeg.writeFile(inFileName, /*get audio file*/));
+                await ffmpeg.exec(['-i', inFileName, 'output.opus']);
+                const data = await ffmpeg.readFile('output.opus');
+                var procAudioURL = URL.createObjectURL(new Blob([data.buffer], {type: 'audio/opus'}));
+            }
+
+            return procAudioURL;
+        }
+
+        //end ffmpeg
+
+
         pause.onclick = function () {
             if (currentAudio.readyState >= 3) {
                 if (playerState == 'paused') {
