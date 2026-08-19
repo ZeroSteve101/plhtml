@@ -350,7 +350,7 @@
 
             const transcode = async () => {
                 const ffmpeg = ffmpegRef.current;
-                await ffmpeg.writeFile(inFileName, /*get audio file*/));
+                await ffmpeg.writeFile(inFileName, inFile));
                 await ffmpeg.exec(['-i', inFileName, 'output.opus']);
                 const data = await ffmpeg.readFile('output.opus');
                 var procAudioURL = URL.createObjectURL(new Blob([data.buffer], {type: 'audio/opus'}));
@@ -501,8 +501,16 @@
 
         function setMusic(musicFile) {
             currentAudio.pause()
-            var musicURL = URL.createObjectURL(musicFile)
-            currentAudio.src = musicURL;
+
+			console.log(musicFile.type)
+			console.log(currentAudio.canPlayType(musicFile.type))
+			
+			if (currentAudio.canPlayType(musicFile.type) != "probably") {
+				currentAudio.src = transcodeFile()
+			} else {
+            	var musicURL = URL.createObjectURL(musicFile)
+            	currentAudio.src = musicURL;
+			}
 
             seek.value = 0;
             lyrics.scrollTop = 0;
@@ -753,6 +761,7 @@
         });
 
         function filterList(list) {
+			/*
             for (var i = 0; i < list.length; i++) {
                 var file = list[i]
                 if (!file.type.startsWith('audio/') && (file.type != 'application/ogg')) {
@@ -761,7 +770,7 @@
                     i -= 1
                 }
             }
-
+			*/
             return list
         }
 
