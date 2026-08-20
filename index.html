@@ -425,7 +425,7 @@
 
         function musicChange (amt) {
             if (playlistIndex >= 0) {
-                var current = document.getElementById(fileList[playlistIndex].webkitRelativePath)
+                var current = document.getElementById(fileList[playlistIndex].name)
                 current.className = 'queueblob'
             }
             console.log(autoShuffle)
@@ -434,7 +434,7 @@
             } else if (playlistIndex + amt > fileList.length - 1) {
                 if (autoShuffle) {
                     shufflePlaylist(true)
-                    var next = document.getElementById(fileList[0].webkitRelativePath)
+                    var next = document.getElementById(fileList[0].name)
                     next.className = 'queueblob select'
                     next.scrollIntoView({ behavior: "smooth", block: "center"})
                     setMusic(fileList[0])
@@ -446,7 +446,7 @@
                 playlistIndex += amt
             }
 
-            var next = document.getElementById(fileList[playlistIndex].webkitRelativePath)
+            var next = document.getElementById(fileList[playlistIndex].name)
             next.className = 'queueblob select'
             next.scrollIntoView({ behavior: "smooth", block: "center"})
             setMusic(fileList[playlistIndex])
@@ -454,13 +454,13 @@
 
         function changeTo (index) {
             if (playlistIndex >= 0) {
-                var current = document.getElementById(fileList[playlistIndex].webkitRelativePath)
+                var current = document.getElementById(fileList[playlistIndex].name)
                 current.className = 'queueblob'
             }
-            
             playlistIndex = index
+            console.log(fileList[playlistIndex].name)
 
-            var next = document.getElementById(fileList[playlistIndex].webkitRelativePath)
+            var next = document.getElementById(fileList[playlistIndex].name)
             next.className = 'queueblob select'
 
             setMusic(fileList[playlistIndex])
@@ -691,6 +691,7 @@
                 var start = fileList.length
                 fileList = fileList.concat(Array.from(e.target.files))
                 fileList = filterList(fileList)
+                console.log(fileList)
                 if (playlistIndex == -2) {
                     setMusic(fileList[0])
                     playlistIndex = 0
@@ -703,7 +704,7 @@
             if (e.target.files) {
                 var start = fileList.length
                 fileList = fileList.concat(Array.from(e.target.files))
-                filterList(fileList)
+                fileList = filterList(fileList)
                 if (playlistIndex == -2) {
                     setMusic(fileList[0])
                     playlistIndex = 0
@@ -817,7 +818,7 @@
                 const newBlob = document.createElement('div');
                 newBlob.className = 'queueblob' + (pos == playlistIndex? ' select':'');
                 newBlob.addEventListener('click', function (event) {changeTo(Number(event.currentTarget.querySelector(".blobIndex").textContent))});
-                newBlob.id = fileList[pos].webkitRelativePath;
+                newBlob.id = fileList[pos].name;
 
                 const blobImg = document.createElement('img');
                 blobImg.className = 'smallcover';
@@ -901,7 +902,7 @@
                 shuffleButton.innerHTML = 'Shuffle'
             } else {
                 if (playlistIndex >= 0) {
-                    document.getElementById(fileList[playlistIndex].webkitRelativePath).className = "queueblob"
+                    document.getElementById(fileList[playlistIndex].name).className = "queueblob"
                 }
 
                 var fragment = document.createDocumentFragment()
@@ -909,7 +910,7 @@
                 fileList = shuffleArray(fileList)
 
                 for (var i = 0; i < fileList.length; i++) {
-                    var el = document.getElementById(fileList[i].webkitRelativePath)
+                    var el = document.getElementById(fileList[i].name)
                     el.querySelector(".blobIndex").textContent = i
                     queue.appendChild(el)
                 }
