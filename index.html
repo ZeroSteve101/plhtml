@@ -237,7 +237,7 @@
             </div>
             <div class="queuehalf">
                 <div class="queuecontainer">
-                    <button class="buttontext" id="shuffle" type="button" onclick="shufflePlaylist()">Shuffle</button>
+                    <button class="buttontext" id="shuffle" type="button" onclick="shufflePlaylist()" oncontextmenu="shuffleButtonChange();return false;">Shuffle</button>
                     <label class="buttontext">
                         Load Folder
                         <input id="loadFolders" type="file" webkitdirectory directory multiple accept="audio/*">
@@ -307,6 +307,7 @@
         const errormsg = document.getElementById('errormsg')
         const queue = document.getElementById("queue")
         const lyrics = document.getElementById("lyrics")
+        const shuffleButton = document.getElementById("shuffle")
         var lyricLen = 0
 
         var audioCtx = new AudioContext()
@@ -318,6 +319,7 @@
 
         var fileList = []
         var playlistIndex = -2
+        var autoShuffle = false
 
 
         //start ffmpeg
@@ -466,34 +468,42 @@
 
         function musicChange (amt) {
             if (playlistIndex >= 0) {
-                var current = document.getElementById("queue " + playlistIndex)
+                var current = document.getElementById(fileList[playlistIndex].webkitRelativePath)
                 current.className = 'queueblob'
             }
-
+            console.log(autoShuffle)
             if ((playlistIndex + amt) < 0) {
                 playlistIndex = fileList.length - 1
             } else if (playlistIndex + amt > fileList.length - 1) {
+                if (autoShuffle) {
+                    shufflePlaylist(true)
+                    var next = document.getElementById(fileList[0].webkitRelativePath)
+                    next.className = 'queueblob select'
+                    next.scrollIntoView({ behavior: "smooth", block: "center"})
+                    setMusic(fileList[0])
+                    playlistIndex = 0
+                    return false;
+                }
                 playlistIndex = 0
             } else {
                 playlistIndex += amt
             }
 
-            var next = document.getElementById(`queue ${playlistIndex}`)
+            var next = document.getElementById(fileList[playlistIndex].webkitRelativePath)
             next.className = 'queueblob select'
             next.scrollIntoView({ behavior: "smooth", block: "center"})
-
             setMusic(fileList[playlistIndex])
         }
 
         function changeTo (index) {
             if (playlistIndex >= 0) {
-                var current = document.getElementById(`queue ${playlistIndex}`)
+                var current = document.getElementById(fileList[playlistIndex].webkitRelativePath)
                 current.className = 'queueblob'
             }
             
             playlistIndex = index
 
-            var next = document.getElementById(`queue ${playlistIndex}`)
+            var next = document.getElementById(fileList[playlistIndex].webkitRelativePath)
             next.className = 'queueblob select'
 
             setMusic(fileList[playlistIndex])
@@ -729,25 +739,27 @@
 
         document.getElementById('loadFolders').addEventListener('change', function(e) {
             if (e.target.files) {
+                var start = fileList.length
                 fileList = fileList.concat(Array.from(e.target.files))
                 fileList = filterList(fileList)
                 if (playlistIndex == -2) {
                     setMusic(fileList[0])
                     playlistIndex = 0
                 }
-                setQueue()
+                setQueue(start)
             }
         })
 
         document.getElementById('loadFiles').addEventListener('change', function(e) {
             if (e.target.files) {
+                var start = fileList.length
                 fileList = fileList.concat(Array.from(e.target.files))
                 filterList(fileList)
                 if (playlistIndex == -2) {
                     setMusic(fileList[0])
                     playlistIndex = 0
                 }
-                setQueue()
+                setQueue(start)
             }
         })
 
@@ -843,19 +855,21 @@
         }
 
         function setQueue(start) {
-            queueList.innerHTML = ''
+            if (!start) {
+                queueList.innerHTML = ''
+            }
 
             if (!fileList.length) {
                 queueList.appendChild(document.createTextNode('Nothing Loaded, Bozo'))
                 return
             }
 
-            fileList.forEach ((musicFile, pos) => {
-                //const musicFile = fileList[pos]
+            for (var pos = start; pos < fileList.length; pos++) {
+                const musicFile = fileList[pos]
                 const newBlob = document.createElement('div');
                 newBlob.className = 'queueblob' + (pos == playlistIndex? ' select':'');
-                newBlob.addEventListener('click', function (event) {changeTo(pos)});
-                newBlob.id = `queue ${pos}`;
+                newBlob.addEventListener('click', function (event) {changeTo(Number(event.currentTarget.querySelector(".blobIndex").textContent))});
+                newBlob.id = fileList[pos].webkitRelativePath;
 
                 const blobImg = document.createElement('img');
                 blobImg.className = 'smallcover';
@@ -865,10 +879,16 @@
 
                 const newInfo = document.createElement('div');
                 newInfo.className = 'smallinfo';
+
+                const blobIndex = document.createElement('div')
+                blobIndex.innerHTML = pos
+                blobIndex.className = "blobIndex"
+                blobIndex.style = "display: none;"
             
                 newBlob.appendChild(blobImg);
                 newBlob.appendChild(newTitle);
                 newBlob.appendChild(newInfo);
+                newBlob.appendChild(blobIndex)
                 queueList.appendChild(newBlob);
                 /*
                 console.log('blobImg', blobImg, blobImg instanceof Node);
@@ -921,16 +941,41 @@
                     newInfo.textContent = ''
                 }
             })();
-            })
+            }
             if (document.getElementById(0)) {
                 document.getElementById(0).scrollIntoView({ behavior: "smooth", block: "center"})
             }
         }
 
-        function shufflePlaylist() {
-            fileList = shuffleArray(fileList)
-            playlistIndex = -1
-            setQueue(0)
+        function shufflePlaylist(shuffleAnyway) {
+            if (autoShuffle && !shuffleAnyway) {
+                autoShuffle = false
+                shuffleButton.innerHTML = 'Shuffle'
+            } else {
+                if (playlistIndex >= 0) {
+                    document.getElementById(fileList[playlistIndex].webkitRelativePath).className = "queueblob"
+                }
+
+                var fragment = document.createDocumentFragment()
+
+                fileList = shuffleArray(fileList)
+
+                for (var i = 0; i < fileList.length; i++) {
+                    var el = document.getElementById(fileList[i].webkitRelativePath)
+                    el.querySelector(".blobIndex").textContent = i
+                    queue.appendChild(el)
+                }
+
+                playlistIndex = -1
+
+                queue.scrollTo(0,0)
+                //setQueue(0)
+            }
+        }
+
+        function shuffleButtonChange() {
+            autoShuffle = true;
+            shuffleButton.innerHTML = 'Auto-Shuffle';
         }
 
         function shuffleArray(array) {
@@ -962,6 +1007,7 @@
         window.shufflePlaylist = shufflePlaylist;
         window.clearQueue = clearQueue;
         window.toggleLyrics = toggleLyrics;
+        window.shuffleButtonChange = shuffleButtonChange;
 
         cover.src = placeholderCover
     </script>
