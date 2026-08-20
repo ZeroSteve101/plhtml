@@ -432,15 +432,16 @@
             if ((playlistIndex + amt) < 0) {
                 playlistIndex = fileList.length - 1
             } else if (playlistIndex + amt > fileList.length - 1) {
-                playlistIndex = 0
                 if (autoShuffle) {
                     shufflePlaylist(true)
                     var next = document.getElementById(fileList[0].webkitRelativePath)
                     next.className = 'queueblob select'
                     next.scrollIntoView({ behavior: "smooth", block: "center"})
                     setMusic(fileList[0])
+                    playlistIndex = 0
                     return false;
                 }
+                playlistIndex = 0
             } else {
                 playlistIndex += amt
             }
@@ -687,25 +688,27 @@
 
         document.getElementById('loadFolders').addEventListener('change', function(e) {
             if (e.target.files) {
+                var start = fileList.length
                 fileList = fileList.concat(Array.from(e.target.files))
                 fileList = filterList(fileList)
                 if (playlistIndex == -2) {
                     setMusic(fileList[0])
                     playlistIndex = 0
                 }
-                setQueue()
+                setQueue(start)
             }
         })
 
         document.getElementById('loadFiles').addEventListener('change', function(e) {
             if (e.target.files) {
+                var start = fileList.length
                 fileList = fileList.concat(Array.from(e.target.files))
                 filterList(fileList)
                 if (playlistIndex == -2) {
                     setMusic(fileList[0])
                     playlistIndex = 0
                 }
-                setQueue()
+                setQueue(start)
             }
         })
 
@@ -800,15 +803,17 @@
         }
 
         function setQueue(start) {
-            queueList.innerHTML = ''
+            if (!start) {
+                queueList.innerHTML = ''
+            }
 
             if (!fileList.length) {
                 queueList.appendChild(document.createTextNode('Nothing Loaded, Bozo'))
                 return
             }
 
-            fileList.forEach ((musicFile, pos) => {
-                //const musicFile = fileList[pos]
+            for (var pos = start; pos < fileList.length; pos++) {
+                const musicFile = fileList[pos]
                 const newBlob = document.createElement('div');
                 newBlob.className = 'queueblob' + (pos == playlistIndex? ' select':'');
                 newBlob.addEventListener('click', function (event) {changeTo(Number(event.currentTarget.querySelector(".blobIndex").textContent))});
@@ -884,7 +889,7 @@
                     newInfo.textContent = ''
                 }
             })();
-            })
+            }
             if (document.getElementById(0)) {
                 document.getElementById(0).scrollIntoView({ behavior: "smooth", block: "center"})
             }
@@ -909,8 +914,9 @@
                     queue.appendChild(el)
                 }
 
-
                 playlistIndex = -1
+
+                queue.scrollTo(0,0)
                 //setQueue(0)
             }
         }
