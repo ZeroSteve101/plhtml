@@ -237,7 +237,7 @@
             </div>
             <div class="queuehalf">
                 <div class="queuecontainer">
-                    <button class="buttontext" id="shuffle" type="button" onclick="shufflePlaylist()">Shuffle</button>
+                    <button class="buttontext" id="shuffle" type="button" onclick="shufflePlaylist()" oncontextmenu="shuffleButtonChange();return false;">Shuffle</button>
                     <label class="buttontext">
                         Load Folder
                         <input id="loadFolders" type="file" webkitdirectory directory multiple accept="audio/*">
@@ -307,6 +307,7 @@
         const errormsg = document.getElementById('errormsg')
         const queue = document.getElementById("queue")
         const lyrics = document.getElementById("lyrics")
+        const shuffleButton = document.getElementById("shuffle")
         var lyricLen = 0
 
         var audioCtx = new AudioContext()
@@ -318,6 +319,7 @@
 
         var fileList = []
         var playlistIndex = -2
+        var autoShuffle = false
 
         pause.onclick = function () {
             if (currentAudio.readyState >= 3) {
@@ -426,11 +428,19 @@
                 var current = document.getElementById("queue " + playlistIndex)
                 current.className = 'queueblob'
             }
-
+            console.log(autoShuffle)
             if ((playlistIndex + amt) < 0) {
                 playlistIndex = fileList.length - 1
             } else if (playlistIndex + amt > fileList.length - 1) {
                 playlistIndex = 0
+                if (autoShuffle) {
+                    shufflePlaylist(true)
+                    var next = document.getElementById(`queue 0`)
+                    next.className = 'queueblob select'
+                    next.scrollIntoView({ behavior: "smooth", block: "center"})
+                    setMusic(fileList[0])
+                    return false;
+                }
             } else {
                 playlistIndex += amt
             }
@@ -438,7 +448,6 @@
             var next = document.getElementById(`queue ${playlistIndex}`)
             next.className = 'queueblob select'
             next.scrollIntoView({ behavior: "smooth", block: "center"})
-
             setMusic(fileList[playlistIndex])
         }
 
@@ -875,10 +884,20 @@
             }
         }
 
-        function shufflePlaylist() {
-            fileList = shuffleArray(fileList)
-            playlistIndex = -1
-            setQueue(0)
+        function shufflePlaylist(shuffleAnyway) {
+            if (autoShuffle && !shuffleAnyway) {
+                autoShuffle = false
+                shuffleButton.innerHTML = 'Shuffle'
+            } else {
+                fileList = shuffleArray(fileList)
+                playlistIndex = -1
+                setQueue(0)
+            }
+        }
+
+        function shuffleButtonChange() {
+            autoShuffle = true;
+            shuffleButton.innerHTML = 'Auto-Shuffle';
         }
 
         function shuffleArray(array) {
@@ -910,6 +929,7 @@
         window.shufflePlaylist = shufflePlaylist;
         window.clearQueue = clearQueue;
         window.toggleLyrics = toggleLyrics;
+        window.shuffleButtonChange = shuffleButtonChange;
 
         cover.src = placeholderCover
     </script>
