@@ -895,7 +895,9 @@
                 autoShuffle = false
                 shuffleButton.innerHTML = 'Shuffle'
             } else {
-                document.getElementById(fileList[playlistIndex].webkitRelativePath).className = "queueblob"
+                if (playlistIndex >= 0) {
+                    document.getElementById(fileList[playlistIndex].webkitRelativePath).className = "queueblob"
+                }
 
                 var fragment = document.createDocumentFragment()
 
