@@ -319,6 +319,7 @@
 
         var fileList = []
         var playlistIndex = -2
+        var specialIndex = 0
         var autoShuffle = false
 
         pause.onclick = function () {
@@ -819,6 +820,10 @@
                 newBlob.className = 'queueblob' + (pos == playlistIndex? ' select':'');
                 newBlob.addEventListener('click', function (event) {changeTo(Number(event.currentTarget.querySelector(".blobIndex").textContent))});
                 newBlob.id = fileList[pos].name;
+                newBlob.addEventListener("contextmenu", (event) => {
+                    event.preventDefault();
+                    move(Number(event.currentTarget.querySelector(".blobIndex").textContent))
+                })
 
                 const blobImg = document.createElement('img');
                 blobImg.className = 'smallcover';
@@ -894,6 +899,33 @@
             if (document.getElementById(0)) {
                 document.getElementById(0).scrollIntoView({ behavior: "smooth", block: "center"})
             }
+        }
+
+        function move(fromIdx) {
+            if (fromIdx == playlistIndex) {
+                return false;
+            }
+            if (specialIndex <= playlistIndex) {
+                specialIndex = playlistIndex + 1
+            }
+
+            var selected = fileList[fromIdx]
+
+            fileList.splice(specialIndex,0,selected)
+
+            if (fromIdx > specialIndex) {
+                fileList.splice(fromIdx + 1,1)
+            } else {
+                fileList.splice(fromIdx,1)
+            }
+
+            for (var i = 0; i < fileList.length; i++) {
+                var el = document.getElementById(fileList[i].name)
+                el.querySelector(".blobIndex").textContent = i
+                queue.appendChild(el)
+            }
+
+            specialIndex += 1
         }
 
         function shufflePlaylist(shuffleAnyway) {
